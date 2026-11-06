@@ -252,10 +252,10 @@ const carFx = (f: number, cars: CarP[], out: Stage) => {
 const pilots = (cam: CamInfo, f: number, planes: PlaneP[], out: Stage) => {
   for (const p of planes) {
     if (!p.pilot) continue;
-    const s = local(p, [0.3, 0.62, 0.78]), [o, okey] = outfitOf(p.pilot.outfit, p.pilot.i);
+    const s = local(p, [0.3, 0.86, 0.78]), [o, okey] = outfitOf(p.pilot.outfit, p.pilot.i);
     const fo: FrontOpts = { mode: "sit", expr: p.pilot.expr, blink: Math.max(lidAt(f, p.pilot.i), blinkSwap(p.pilot.i, f, p.pilot.expr)) };
     out.places.push({ ...person(cam, { i: p.pilot.i, o, okey }, s[0], s[1], s[2], { side: false, mirror: false }, fo, {}, 0.92), roll: seatRoll(cam, p) });
-    if (p.pilot.expr === "nervous") sweat(out, local(p, [0.05, 0.62 + 1.25, 0.78]), f);
+    if (p.pilot.expr === "nervous") sweat(out, local(p, [0.05, 0.86 + 1.2, 0.78]), f);
   }
 };
 const sweat = (out: Stage, p: V3, f: number) => {

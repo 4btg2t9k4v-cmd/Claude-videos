@@ -265,11 +265,13 @@ const lineM = () => lam("roadLine", () => ({ color: "#f4f1e6" }));
 export const buildSuburb = (root: THREE.Object3D, kit: Kit, rays: Ray[]) => {
   setSight(rays);
   const b = new Batch();
-  b.add(quadUp(-1600, 1600, -1600, 1600, 3200 / 6, 3200 / 6), lam("grassHD", () => ({ map: grassHD() })));
+  // the ground is pushed back in depth so roads, paths and plazas laid on it never z-fight at grazing angles
+  const ground = lam("groundGrass", () => ({ map: grassHD(), polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 8 }));
+  b.add(quadUp(-1600, 1600, -1600, 1600, 3200 / 6, 3200 / 6), ground);
   const street = (x: number, z0 = -430, z1 = 430) => {
-    b.add(quadUp(x - 4, x + 4, z0, z1, 8 / 8, (z1 - z0) / 8, 0.012), asph());
-    for (let z = z0; z < z1; z += 9) b.add(boxGeo(V(x - 0.08, 0.012, z), V(x + 0.08, 0.02, z + 3.5)), lineM());
-    for (const s of [-1, 1]) b.add(boxGeo(V(x + s * 3.65 - 0.06, 0.012, z0), V(x + s * 3.65 + 0.06, 0.02, z1)), lineM());
+    b.add(quadUp(x - 4, x + 4, z0, z1, 8 / 8, (z1 - z0) / 8, 0.04), asph());
+    for (let z = z0; z < z1; z += 9) b.add(boxGeo(V(x - 0.08, 0.04, z), V(x + 0.08, 0.06, z + 3.5)), lineM());
+    for (const s of [-1, 1]) b.add(boxGeo(V(x + s * 3.65 - 0.06, 0.04, z0), V(x + s * 3.65 + 0.06, 0.06, z1)), lineM());
   };
   street(0);
   for (const s of [-1, 1]) {
@@ -277,8 +279,8 @@ export const buildSuburb = (root: THREE.Object3D, kit: Kit, rays: Ray[]) => {
     for (const zc of HOUSE_Z) {
       const i = Math.round(zc / 15) + 20 + (s > 0 ? 0 : 40);
       house(b, s * HOUSE_X, zc, -s * Math.PI / 2, 9, 8, 5.6, Math.floor(hh(i, 9) * 8), 0);
-      b.add(quadUp(s > 0 ? 5.8 : -11.8, s > 0 ? 11.8 : -5.8, zc + 5, zc + 8, 2, 1, 0.025), conc());
-      b.add(quadUp(s > 0 ? 5.8 : -11.6, s > 0 ? 11.6 : -5.8, zc - 1.2, zc - 0.2, 2, 0.35, 0.022), conc()); // front path
+      b.add(quadUp(s > 0 ? 5.8 : -11.8, s > 0 ? 11.8 : -5.8, zc + 5, zc + 8, 2, 1, 0.05), conc());
+      b.add(quadUp(s > 0 ? 5.8 : -11.6, s > 0 ? 11.6 : -5.8, zc - 1.2, zc - 0.2, 2, 0.35, 0.045), conc()); // front path
       prop(b, kit, ["tree_oak", "tree_default", "tree_fat", "tree_detailed"][i % 4], s * 7.2, 0, zc - 4.6, 6.2 + hh(i, 3) * 2.2, i);
       prop(b, kit, "hedge", s * 13.4, 0, zc - 7.5, 0.95, 0);
       prop(b, kit, "plant_bush", s * 12.3, 0, zc - 2.4, 0.8, i);
@@ -316,12 +318,12 @@ export const buildSuburb = (root: THREE.Object3D, kit: Kit, rays: Ray[]) => {
 /** airfield apron + runway + hangar + windsock, and the control tower (shots 16-17) */
 export const buildField = (root: THREE.Object3D) => {
   const b = new Batch(), X = FIELD[0];
-  b.add(quadUp(X - 22, X + 38, -150, 150, 60 / 8, 300 / 8, 0.015), asph());
-  b.add(quadUp(X + 40, X + 64, -400, 400, 3, 100, 0.016), asph());
-  for (let z = -390; z < 390; z += 30) b.add(boxGeo(V(X + 51.75, 0.016, z), V(X + 52.25, 0.024, z + 14)), lineM());
-  for (const s of [-1, 1]) b.add(boxGeo(V(X + 52 + s * 11.2 - 0.2, 0.016, -400), V(X + 52 + s * 11.2 + 0.2, 0.024, 400)), lineM());
-  for (let k = 0; k < 8; k++) b.add(boxGeo(V(X + 42 + k * 2.6, 0.016, -380), V(X + 43.4 + k * 2.6, 0.024, -350)), lineM());
-  for (let z = -140; z < 140; z += 6) b.add(boxGeo(V(X + 7.9, 0.015, z), V(X + 8.1, 0.023, z + 3)), lam("taxiLine", () => ({ color: "#f2c14e" })));
+  b.add(quadUp(X - 22, X + 38, -150, 150, 60 / 8, 300 / 8, 0.04), asph());
+  b.add(quadUp(X + 40, X + 64, -400, 400, 3, 100, 0.04), asph());
+  for (let z = -390; z < 390; z += 30) b.add(boxGeo(V(X + 51.75, 0.04, z), V(X + 52.25, 0.06, z + 14)), lineM());
+  for (const s of [-1, 1]) b.add(boxGeo(V(X + 52 + s * 11.2 - 0.2, 0.04, -400), V(X + 52 + s * 11.2 + 0.2, 0.06, 400)), lineM());
+  for (let k = 0; k < 8; k++) b.add(boxGeo(V(X + 42 + k * 2.6, 0.04, -380), V(X + 43.4 + k * 2.6, 0.06, -350)), lineM());
+  for (let z = -140; z < 140; z += 6) b.add(boxGeo(V(X + 7.9, 0.04, z), V(X + 8.1, 0.06, z + 3)), lam("taxiLine", () => ({ color: "#f2c14e" })));
   // hangar
   const hx = X - 10, hz = -32;
   b.add(boxGeo(V(hx - 12, 0, hz - 10), V(hx + 12, 7, hz + 10), 4), lam("hangarWall", () => ({ color: "#c7cfd8" })));
@@ -351,7 +353,7 @@ export const buildField = (root: THREE.Object3D) => {
 /** food-court plaza: tiles, mall wall, four stalls with striped awnings, tables with umbrellas, planters */
 export const buildFood = (root: THREE.Object3D, kit: Kit) => {
   const b = new Batch(), [X, , Z] = FOOD;
-  b.add(quadUp(X - 22, X + 22, Z - 20, Z + 18, 44 / 4.8, 38 / 4.8, 0.02), lam("plaza", () => ({ map: tilesHD() })));
+  b.add(quadUp(X - 22, X + 22, Z - 20, Z + 18, 44 / 4.8, 38 / 4.8, 0.04), lam("plaza", () => ({ map: tilesHD() })));
   b.add(boxGeo(V(X - 24, 0, Z + 17), V(X + 24, 10, Z + 19), 6), lam("mallWall", () => ({ map: facadeHD("mallWall", 48, 10, { wall: "#e6d2ac", shutter: "#3f6fb5", door: true }) })));
   const cols = ["#d94a3a", "#f2c14e", "#3f7fd0", "#4fae6a"];
   [-12, -4, 4, 12].forEach((sx, k) => {
@@ -390,8 +392,8 @@ export const buildSkyRoad = (root: THREE.Object3D) => {
   const g = new THREE.Group(), b = new Batch(), Y = ROAD_Y, [hx, , hz] = HOLE, hw = 0.85, hd = 0.68;
   const top = asph(), side = conc();
   const deck = (x0: number, x1: number, z0: number, z1: number) => {
-    b.add(quadUp(x0, x1, z0, z1, (x1 - x0) / 8, (z1 - z0) / 8, Y), top);
-    b.add(boxGeo(V(x0, Y - 1.0, z0), V(x1, Y - 0.001, z1), 3, true), side);
+    b.add(boxGeo(V(x0, Y - 1.0, z0), V(x1, Y, z1), 8, true), top); // one closed slab: no coplanar faces
+    void side;
   };
   deck(-6.6, hx - hw, -300, 300); deck(hx + hw, 6.6, -300, 300);
   deck(hx - hw, hx + hw, -300, hz - hd); deck(hx - hw, hx + hw, hz + hd, 300);
@@ -407,10 +409,10 @@ export const buildSkyRoad = (root: THREE.Object3D) => {
   }
   for (let z = -296; z < 296; z += 7) for (const x of [-2.1, 2.1]) {
     if (Math.abs(z + 1.5 - hz) < 2.5 && Math.abs(x - hx) < 1.5) continue;
-    b.add(boxGeo(V(x - 0.07, Y, z), V(x + 0.07, Y + 0.012, z + 3)), lineM());
+    b.add(boxGeo(V(x - 0.07, Y + 0.02, z), V(x + 0.07, Y + 0.04, z + 3)), lineM());
   }
   for (const s of [-1, 1]) {
-    b.add(boxGeo(V(s * 6.1 - 0.07, Y, -300), V(s * 6.1 + 0.07, Y + 0.012, 300)), lineM());
+    b.add(boxGeo(V(s * 6.1 - 0.07, Y + 0.02, -300), V(s * 6.1 + 0.07, Y + 0.04, 300)), lineM());
     for (let z = -300; z <= 300; z += 2.5) b.add(boxGeo(V(s * 6.42 - 0.06, Y, z - 0.06), V(s * 6.42 + 0.06, Y + 0.85, z + 0.06)), tone("#9aa1ad"));
     for (const y of [0.55, 0.82]) b.add(boxGeo(V(s * 6.42 - 0.05, Y + y - 0.07, -300), V(s * 6.42 + 0.05, Y + y + 0.07, 300)), tone("#c9ced6"));
     for (let z = -285; z <= 285; z += 30) {

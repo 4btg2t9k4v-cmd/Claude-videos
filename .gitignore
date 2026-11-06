@@ -1,3 +1,4 @@
 node_modules
 out
 *.mp4
+audio_work/*/out/stem_*.wav

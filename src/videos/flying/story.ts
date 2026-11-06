@@ -518,8 +518,8 @@ const youHome: Pose = { x: YOU_HOME[0], y: 0, z: YOU_HOME[2], yaw: -Math.PI / 2,
 const CAMS: Record<number, Key[]> = {
   1: [
     { f: 0, s: onCar(youJam, [3.25, 1.66, 1.45], [0.45, 1.42, 0.05], 0, 0.0028, { fov: 38 }) },
-    { f: wf(7) - 2, cut: true, s: (f) => dolly([-1.5, 1.7, -27], [2.5, 29, 24], pushK(f, wf(7) - 2, 0.0022, 0.0065, 34), { fov: 52 }) },
-    { f: wf(13) - 4, dur: 24, s: (f) => dolly([-1.5, 1.7, -27], [2.5, 29, 24], pushK(f, wf(7) - 2, 0.0022, 0.0065, 34), { fov: 52, roll: -0.05 }) },
+    { f: wf(7) - 2, cut: true, s: (f) => dolly([-1.5, 1.7, -27], [2.5, 25, 24], pushK(f, wf(7) - 2, 0.0022, 0.0065, 34), { fov: 52 }) },
+    { f: wf(13) - 4, dur: 24, s: (f) => dolly([-1.5, 1.7, -27], [2.5, 25, 24], pushK(f, wf(7) - 2, 0.0022, 0.0065, 34), { fov: 52, roll: -0.05 }) },
   ],
   2: [{ f: A(16), s: (f) => dolly([-3.5, 7.2, -31], [5.5, 2.8, 8], pushK(f, A(16), 0.0022), { fov: 44 }) }],
   3: [
@@ -533,7 +533,7 @@ const CAMS: Record<number, Key[]> = {
   ],
   5: [
     { f: A(44), s: onCar(cessna5, [-1.5, 2.2, -15.5], [0.5, 1.2, 0], A(44), 0.0022, { fov: 44 }) },
-    { f: wf(52) - 3, cut: true, s: onCar(cessna5, [-0.6, 1.25, -4.6], [0.1, 1.15, -0.4], wf(52) - 3, 0.0025, { fov: 38, roll: 0.03 }, 0.006, 30) },
+    { f: wf(52) - 3, cut: true, s: onCar(cessna5, [-0.35, 1.78, -4.4], [0.72, 1.62, -0.3], wf(52) - 3, 0.0025, { fov: 38, roll: 0.03 }, 0.006, 30) },
   ],
   6: [
     { f: A(56), s: (f) => dolly([-5.4, 2.4, 44.5], [2.6, 0.9, 51], pushK(f, A(56), 0.002), { fov: 44 }) },
@@ -643,7 +643,7 @@ export const DOF: Dof[] = [
   { f: wf(25) - 2, cInf: 0 },
   { f: A(32), cInf: 12, focus: (f) => headOf(pose(2, 22, 9 * T(f - A(32)))) },
   { f: A(39), cInf: 0 },
-  { f: wf(52) - 3, cInf: 12, focus: (f) => local(cessna5(f), [0.35, 1.3, 0.6]) },
+  { f: wf(52) - 3, cInf: 12, focus: (f) => local(cessna5(f), [0.3, 1.64, 0.78]) },
   { f: A(56), cInf: 0 },
   { f: wf(61) - 2, cInf: 12, focus: () => [5.0, 1.62, 50.5] },
   { f: wf(64) - 3, cInf: 0 },
