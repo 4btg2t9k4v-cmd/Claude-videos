@@ -386,6 +386,7 @@ export const carsAt = (id: number, f: number): CarP[] => {
         const yaw = (hh(lid, 3) - 0.5) * 1.6 * (1 - k);
         const z = rz + ref22(f) + (hh(lid, 4) - 0.5) * 4 * (1 - k);
         if (z > LIGHT_AT[2] - 14) continue;
+        if (Math.abs(z - (ref22(f) + 30)) < 7 && lx <= 0) continue; // keep you and the cop clear
         out.push({ ...pose(cx, cy + bob(lid, f) * (1 - k), z, yaw), id: lid, col: pal(lid), kind: "car", fly: 1,
           d: { i: lid, expr: k < 0.5 ? "nervous" : "smile" } });
       }
@@ -404,7 +405,7 @@ export const carsAt = (id: number, f: number): CarP[] => {
       // and the lane-flow version of you + the cop for the "speed limits" beat (moving with the flow)
       const R = ref22(f);
       out.push(you(pose(0, LANE_Y + bob(1, f) * 0.4, R + 30), { id: 2 }));
-      out.push({ ...pose(-4, LANE_Y + bob(3, f), R + 29.4), id: 222, col: "#f4f4f4", kind: "police", fly: 1, d: { i: 222, outfit: "cop", expr: "stern", wave: Math.sin(T(f) * 8) } });
+      out.push({ ...pose(-2.45, LANE_Y + bob(3, f), R + 29.4), id: 222, col: "#f4f4f4", kind: "police", fly: 1, d: { i: 222, outfit: "cop", expr: "stern", wave: Math.sin(T(f) * 8) } });
       break;
     }
     case 23: case 24: {
@@ -420,13 +421,14 @@ export const carsAt = (id: number, f: number): CarP[] => {
 export const cessna5 = (f: number): Pose => pose(-40 + 22 * T(f - A(44)), 85 + 0.3 * Math.sin(T(f) * 1.3), 60, Math.PI / 2, 0, 0.03 * Math.sin(T(f) * 1.1));
 export const PARKED_CESSNA: Pose = { x: FIELD[0], y: 0, z: 7.2, yaw: Math.PI + 0.35, pitch: 0, roll: 0 };
 export const LANES17_Y = [52, 66, 80, 94];
-export const lane17x = (i: number, f: number) => 220 + i * 70 + 55 * T(f - A(157)) + (i % 2) * 35;
+export const LANE17_Z = 140;
+export const lane17x = (i: number, f: number) => 236 + i * 26 + 34 * T(f - A(157)) + (i % 2) * 18;
 export const planesAt = (id: number, f: number): PlaneP[] => {
   const out: PlaneP[] = [];
   switch (id) {
     case 5: out.push({ ...cessna5(f), kind: "cessna", prop: f, pilot: { i: 50, outfit: "student", expr: at(f, 55) ? "stern" : at(f, 52) ? "nervous" : "smile" } }); break;
     case 11: out.push({ ...jet11(f), kind: "jet" }); break;
-    case 15: out.push({ ...pose(-260 + 62 * T(f - A(139)), 66, -95, Math.PI / 2), kind: "jet" }); break;
+    case 15: out.push({ ...pose(-125 + 62 * T(f - A(139)), 62, -110, Math.PI / 2), kind: "jet" }); break;
     case 16: out.push({ ...PARKED_CESSNA, kind: "cessna", prop: 0 }); break;
     case 17: {
       out.push({ ...PARKED_CESSNA, kind: "cessna", prop: 0 });
@@ -450,16 +452,16 @@ export const birdsAt = (id: number, f: number): BirdP[] => {
     const j = jet11(f), hit = wf(107) - 1;
     // a flock just ahead of the nose; the plane flies into it
     for (let i = 0; i < 26; i++) {
-      const bx = -90 + 72 * T(hit - A(105)) + 18.6 + 6 + i * 2.3, by = 160 + 0.6 + (hh(i, 2) - 0.5) * 9, bz = (hh(i, 3) - 0.5) * 22;
+      const bx = -90 + 72 * T(hit - A(105)) + 17.5 - 30 + (i % 9) * 7.5 + hh(i, 1) * 3, by = 160 + 0.6 + (hh(i, 2) - 0.5) * 12, bz = (hh(i, 3) - 0.5) * 26;
       const near = Math.abs(bx - (j.x + 18.6)) < 10;
       const scat = Math.max(0, j.x + 25 - bx) * 0.6;
       if (i === 0) {
         // the unlucky one: bonks off the nose on "hit"
-        if (f < hit) out.push({ x: j.x + 18.4 + 0.15 * (hit - f), y: 160.5, z: 0, flap: flap(i, 12), mood: "shock", s: 0.7 });
-        else { const u = T(f - hit); out.push({ x: j.x + 18.4 - 30 * u, y: 160.5 + 4 * u - 4.9 * u * u, z: -3 * u, flap: 0, mood: "dazed", s: 0.7, rot: u * 9 }); }
+        if (f < hit) out.push({ x: j.x + 17.6 + 0.6 * (hit - f), y: 160.5, z: -0.2, flap: flap(i, 12), mood: "shock", s: 1.1 });
+        else { const u = T(f - hit); out.push({ x: j.x + 17.9 + 1.2 * u - 9 * Math.max(0, u - 0.5) ** 2, y: 160.6 + 1.4 * u - 1.6 * u * u, z: -0.4 - 2.2 * u, flap: 0, mood: "dazed", s: 1.1, rot: u * 7 }); }
         continue;
       }
-      out.push({ x: bx, y: by + scat * Math.sign(hh(i, 4) - 0.5), z: bz + scat * Math.sign(bz || 1) * 1.4, flap: flap(i, near ? 16 : 9), mood: near ? "shock" : "angry", s: 0.65, mirror: true });
+      out.push({ x: bx, y: by + scat * Math.sign(hh(i, 4) - 0.5), z: bz + scat * Math.sign(bz || 1) * 1.4, flap: flap(i, near ? 16 : 9), mood: near ? "shock" : "angry", s: 1.3, mirror: true });
     }
   }
   if (id === 12) {
@@ -536,7 +538,7 @@ const CAMS: Record<number, Key[]> = {
     { f: wf(52) - 3, cut: true, s: onCar(cessna5, [-0.35, 1.78, -4.4], [0.72, 1.62, -0.3], wf(52) - 3, 0.0025, { fov: 38, roll: 0.03 }, 0.006, 30) },
   ],
   6: [
-    { f: A(56), s: (f) => dolly([-5.4, 2.4, 44.5], [2.6, 0.9, 51], pushK(f, A(56), 0.002), { fov: 44 }) },
+    { f: A(56), s: (f) => dolly([-7.2, 3.4, 45.0], [1.6, 0.8, 53.5], pushK(f, A(56), 0.002), { fov: 46 }) },
     { f: wf(61) - 2, cut: true, s: (f) => dolly([3.0, 1.62, 47.6], [5.0, 1.58, 50.5], pushK(f, wf(61) - 2, 0.0025), { fov: 38 }) },
     { f: wf(64) - 3, cut: true, s: (f) => dolly([-3.6, 7.2, 61.5], [2.0, 0.6, 49.5], pushK(f, wf(64) - 3, 0.002), { fov: 44 }) },
   ],
@@ -546,35 +548,35 @@ const CAMS: Record<number, Key[]> = {
     { f: wf(80) - 3, cut: true, s: (f) => { const r = ref7(f); return dolly([15.5, 27.2, r + 4], [0, 26.2, r], pushK(f, wf(80) - 3, 0.0015), { fov: 48 }); } },
   ],
   8: [
-    { f: A(88), s: (f) => dolly([0.2, 27.0, 8.2], [0, rageY(f) + 1.2, 0.2], pushK(f, A(88), 0.0025), { fov: 46 }) },
-    { f: wf(91) - 4, dur: 22, s: (f) => dolly([0.2, 27.0, 8.2], [0, rageY(f) + 1.2, 0.2], pushK(f, A(88), 0.0025), { fov: 46, roll: 0.05 }) },
+    { f: A(88), s: (f) => { const y = rageY(f); return dolly([0.2, y + 2.2, 7.6], [0, y + 1.15, 0.2], pushK(f, A(88), 0.0025), { fov: 46 }); } },
+    { f: wf(91) - 4, dur: 22, s: (f) => { const y = rageY(f); return dolly([0.2, y + 2.6, 7.2], [0, y + 0.6, 0.2], pushK(f, A(88), 0.0025), { fov: 48, roll: 0.05 }); } },
   ],
   9: [
-    { f: A(92), s: (f) => dolly([3.0, 1.0, -18.8], [5.0, 4.6, -13.0], pushK(f, A(92), 0.0022), { fov: 48 }) },
-    { f: wf(95) - 2, cut: true, s: (f) => dolly([6.0, 0.35, -12.4], [4.4, 9.2, -15.6], pushK(f, wf(95) - 2, 0.0022, 0.006, 30), { fov: 52, roll: 0.04 }) },
+    { f: A(92), s: (f) => dolly([2.2, 0.9, -21.5], [5.0, 3.2, -14.0], pushK(f, A(92), 0.0022), { fov: 52 }) },
+    { f: wf(95) - 2, cut: true, s: (f) => dolly([6.1, 0.4, -11.9], [4.6, 5.0, -15.2], pushK(f, wf(95) - 2, 0.0022, 0.006, 30), { fov: 54, roll: 0.04 }) },
   ],
   10: [
     { f: A(101), s: (f) => dolly([0.1, 26.35, -4.3], [0, 26.2, 0.6], pushK(f, A(101), 0.0025, 0.0065, 30), { fov: 40 }) },
     { f: wf(104) - 3, dur: 20, s: (f) => dolly([0.1, 26.35, -4.3], [0, 26.2, 0.6], pushK(f, A(101), 0.0025, 0.0065, 30), { fov: 40, roll: -0.045 }) },
   ],
   11: [
-    { f: A(105), s: onCar(jet11, [42, 5, -30], [6, 0, 0], A(105), 0.002, { fov: 44 }) },
+    { f: A(105), s: onCar(jet11, [74, 7, -40], [22, 1, 0], A(105), 0.002, { fov: 46 }) },
     { f: wf(107) - 4, cut: true, s: onCar(jet11, [24.5, 1.8, -7.2], [18.2, 0.6, 0], wf(107) - 4, 0.0025, { fov: 38 }, 0.006, 26) },
     { f: wf(109) - 3, cut: true, s: onCar(jet11, [70, 14, -72], [8, 0, 0], wf(109) - 3, 0.0016, { fov: 46, roll: 0.03 }) },
   ],
-  12: [{ f: A(115), s: onCar(kevin, [2.3, 1.3, 7.2], [0.4, 1.44, 0], A(115), 0.0025, { fov: 42 }, 0.0, 0) },
-    { f: wf(121) - 3, dur: 20, s: onCar(kevin, [1.7, 1.4, 5.2], [0.42, 1.44, 0], A(115), 0.0025, { fov: 40, roll: 0.04 }) }],
+  12: [{ f: A(115), s: onCar(kevin, [1.7, 1.5, 4.9], [0.42, 1.44, 0], A(115), 0.0025, { fov: 42 }, 0.0, 0) },
+    { f: wf(121) - 3, dur: 20, s: onCar(kevin, [1.3, 1.5, 3.9], [0.42, 1.44, 0], A(115), 0.0025, { fov: 40, roll: 0.04 }) }],
   13: [
     { f: A(122), s: (f) => dolly([3.9, 1.9, -35.4], [-2.9, 2.3, -40], pushK(f, A(122), 0.002), { fov: 44 }) },
     { f: wf(128) - 3, dur: 22, s: (f) => dolly([0.6, 1.75, -37.4], [-2.48, 1.45, -39.95], pushK(f, wf(128) - 3, 0.0025), { fov: 38 }) },
   ],
   14: [
-    { f: A(129), s: (f) => dolly([3.2, 33.6, CUBE_Z + 11.5], [1.4, 32.6, CUBE_Z], pushK(f, A(129), 0.002), { fov: 46 }) },
+    { f: A(129), s: (f) => dolly([6.2, 34.2, CUBE_Z + 21], [4.4, 32.6, CUBE_Z], pushK(f, A(129), 0.002), { fov: 48 }) },
     { f: wf(137) - 3, cut: true, s: (f) => dolly([3.6, 33.5, CUBE_Z + 5.4], [2.4, 33.35, CUBE_Z], pushK(f, wf(137) - 3, 0.0025), { fov: 40, roll: -0.04 }) },
   ],
   15: [
     { f: A(139), s: (f) => dolly([1.9, 31.6, 4.6], [0.42, 31.42, 0.05], pushK(f, A(139), 0.0025), { fov: 38 }) },
-    { f: wf(145) - 6, dur: 30, s: (f) => dolly([2.6, 30.9, 6.2], [-6, 40, -40], pushK(f, wf(145) - 6, 0.001), { fov: 46, roll: 0.03 }) },
+    { f: wf(145) - 6, dur: 30, s: (f) => dolly([2.6, 30.9, 6.2], [0, 44, -40], pushK(f, wf(145) - 6, 0.001), { fov: 46, roll: 0.03 }) },
   ],
   16: [
     { f: A(148), s: (f) => dolly([FIELD[0] + 0.3, 0.85, -5.6], [FIELD[0] + 1.0, 2.0, 2.4], pushK(f, A(148), 0.0025), { fov: 44 }) },
@@ -582,11 +584,11 @@ const CAMS: Record<number, Key[]> = {
   ],
   17: [
     { f: A(157), s: (f) => dolly([TOWER[0] - 6.6, 26.4, TOWER[2] - 8.8], [TOWER[0], 25.9, TOWER[2]], pushK(f, A(157), 0.0022, 0.006, 30), { fov: 40 }) },
-    { f: wf(164) - 3, cut: true, s: (f) => dolly([290, 44, 10], [360, 76, 140], pushK(f, wf(164) - 3, 0.0018), { fov: 48 }) },
-    { f: wf(171) - 8, dur: 30, s: (f) => dolly([284, 72, 22], [360, 78, 140], pushK(f, wf(164) - 3, 0.0018), { fov: 48, roll: -0.04 }) },
+    { f: wf(164) - 3, cut: true, s: (f) => dolly([300, 44, 4], [370, 74, 140], pushK(f, wf(164) - 3, 0.0018), { fov: 50 }) },
+    { f: wf(171) - 8, dur: 30, s: (f) => dolly([300, 70, 16], [372, 78, 140], pushK(f, wf(164) - 3, 0.0018), { fov: 50, roll: -0.04 }) },
   ],
-  18: [{ f: A(172), s: (f) => dolly([FOOD[0] + 2, 5.6, -17], [FOOD[0], 1.2, 4], pushK(f, A(172), 0.0022), { fov: 46 }) }],
-  19: [{ f: A(180), s: (f) => dolly([FOOD[0] + 1, 2.0, -10.5], [FOOD[0], 3.6, 3], pushK(f, A(180), 0.003), { fov: 48, roll: -0.04 }) }],
+  18: [{ f: A(172), s: (f) => dolly([FOOD[0] - 15, 6.5, -21], [FOOD[0] + 1.5, 0.9, 5], pushK(f, A(172), 0.0022), { fov: 48 }) }],
+  19: [{ f: A(180), s: (f) => dolly([FOOD[0] - 11, 2.4, -15], [FOOD[0] + 1, 3.4, 4], pushK(f, A(180), 0.003), { fov: 50, roll: -0.04 }) }],
   20: [{ f: A(186), s: (f) => { const o = old20(f); return zoom([4.2, 1.7, -63.5], [o.x - 0.6, 1.0, o.z + 1.0], 42, pushK(f, A(186), 0.002)); } }],
   21: [
     { f: A(197), s: (f) => { const d = dart(f); return zoom([-2.0, 2.0, -20.0], [DART[0], Math.max(1.6, d.y + 0.9), DART[2]], 46, pushK(f, A(197), 0.0015)); } },
@@ -594,8 +596,8 @@ const CAMS: Record<number, Key[]> = {
   ],
   22: [
     { f: A(207), s: (f) => dolly([-17, 45, -44], [0, 29, 34], pushK(f, A(207), 0.0018), { fov: 46 }) },
-    { f: wf(216) - 3, cut: true, s: (f) => { const r = ref22(f) + 30; return dolly([-1.4, 31.7, r + 8.2], [-1.9, 31.2, r], pushK(f, wf(216) - 3, 0.0025), { fov: 44 }); } },
-    { f: wf(218) - 3, cut: true, s: (f) => dolly([4.6, 33.0, LIGHT_AT[2] + 8.5], [0.8, 33.3, LIGHT_AT[2] - 6], pushK(f, wf(218) - 3, 0.0022), { fov: 44 }) },
+    { f: wf(216) - 3, cut: true, s: (f) => { const r = ref22(f) + 30; return dolly([-0.4, 32.3, r + 10.5], [-1.2, 31.2, r], pushK(f, wf(216) - 3, 0.0025), { fov: 46 }); } },
+    { f: wf(218) - 3, cut: true, s: (f) => dolly([8.6, 33.9, LIGHT_AT[2] - 13], [1.2, 32.9, LIGHT_AT[2] - 2.5], pushK(f, wf(218) - 3, 0.0022), { fov: 46 }) },
     { f: wf(221) - 3, cut: true, s: (f) => dolly(add(YOU22, [1.95, 1.62, 4.6]), add(YOU22, [0.3, 1.42, 0]), pushK(f, wf(221) - 3, 0.003), { fov: 38, roll: 0.03 }) },
   ],
   23: [
@@ -604,7 +606,7 @@ const CAMS: Record<number, Key[]> = {
   ],
   24: [
     { f: A(237), s: (f) => dolly([2.7, 91.7, 14.2], [0.5, 89.8, 9.2], pushK(f, A(237), 0.003), { fov: 42 }) },
-    { f: wf(243) - 3, cut: true, s: (f) => dolly([0.62, 94.4, 10.6], [0.62, 60, 4.6], pushK(f, wf(243) - 3, 0.009), { fov: 44, roll: 0.06 }) },
+    { f: wf(243) - 3, cut: true, s: (f) => dolly([0.62, 94.4, 10.6], [0.62, 60, 4.6], pushK(f, wf(243) - 3, 0.0068), { fov: 44, roll: 0.06 }) },
   ],
 };
 void youHome;
@@ -649,7 +651,7 @@ export const DOF: Dof[] = [
   { f: wf(64) - 3, cInf: 0 },
   { f: wf(72) - 2, cInf: 13, focus: (f) => headOf(guy(f)) },
   { f: wf(80) - 3, cInf: 0 },
-  { f: A(88), cInf: 8 },
+  { f: A(88), cInf: 8, focus: (f) => [0, rageY(f) + 1.4, 0.2] },
   { f: A(92), cInf: 6, focus: () => [WALKER[0], 1.6, WALKER[2]] },
   { f: wf(95) - 2, cInf: 0 },
   { f: A(101), cInf: 14, focus: () => [0, 26.2, 0.6] },
@@ -659,7 +661,7 @@ export const DOF: Dof[] = [
   { f: A(115), cInf: 12, focus: youHead(kevin) },
   { f: A(122), cInf: 5 },
   { f: wf(128) - 3, dur: 22, cInf: 12, focus: () => [-2.48, 1.45, -39.95] },
-  { f: A(129), cInf: 6, focus: () => [2.2, 33.3, CUBE_Z] },
+  { f: A(129), cInf: 4, focus: () => [2.2, 33.3, CUBE_Z] },
   { f: wf(137) - 3, cInf: 12, focus: (f) => headOf(youCube(f)) },
   { f: A(139), cInf: 12, focus: () => [0.42, 31.42, 0.05] },
   { f: wf(145) - 6, dur: 30, cInf: 4, focus: () => [0.42, 31.42, 0.05] },

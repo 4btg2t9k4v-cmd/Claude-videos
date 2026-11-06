@@ -351,7 +351,7 @@ bed(G.bird_chirps(b - a + 2, r, 0.8), a, b, -20)
 bed(sputter(b - a + 0.5, r, 16, False) * 0.25, a, b, -18, 0.2, 0.2, "idling engine")
 bmp = fr(EV["BUMP6"])
 bed(reverse_beeps(bmp - W(65) + 0.3, r), W(65) - 0.1, bmp, -14, 0.02, 0.02, "reverse beeps")
-ev(thunk(r, 80, 0.8), bmp, -4, 0.0, "the bump")
+ev(thunk(r, 80, 0.8), bmp, 1, 0.0, "the bump")
 ev(plastic_tok(r), bmp - 0.12, -9, -0.3, "cone clipped")
 ev(plastic_tok(r, 480), bmp + 0.12, -12, -0.4)
 ev(G.oof(r, "oh", 170, 1.1), bmp + 0.1, -12, 0.3, "examiner gasp")
@@ -479,7 +479,7 @@ for k in range(14):
     ev(horn(r), a + 0.2 + k * (SH[24][0] - a - 0.4) / 14 + r.uniform(0, 0.1), -12 + r.uniform(-4, 0), r.uniform(-0.8, 0.8))
 ev(horn(r, 0.8, 400), W(230) - 0.1, -7, 0.1, "your long honk")
 pot = fr(EV["words"][240] + 1)
-ev(thunk(r, 70, 0.7), pot, -4, 0.15, "pothole clunk")
+ev(thunk(r, 70, 0.7), pot, 0, 0.15, "pothole clunk")
 ev(G.whoosh(2.2, r, 1.6, 300, 1500, tail=0.6), W(243) - 0.3, -10, 0, "falling-away wind", wide=True)
 for tc in [c for c in GLIDES]:
     ev(G.whoosh(0.6, r, 0.3, 350, 2200), tc - 0.05, -16, 0)
@@ -564,14 +564,14 @@ groove(T_(15), T_(16), "bounce", -9, prog=["Dm", "C"], melody=False, drums=False
 groove(T_(16), T_(18), "golden", -4, prog=["F", "Am", "Bb", "C"])   # the explanation
 groove(T_(18), W(181), "bounce", -6, drums=False)             # food court
 groove(W(181), T_(20), "busy", -3, key_shift=2)               # jetpacks!
-groove(T_(20), T_(21), "tuba", -4, prog=["F", "C"])            # the old car rolls to a stop
+groove(T_(20), T_(21), "tuba", -9, prog=["F", "C"])            # the old car rolls to a stop
 groove(T_(21), fr(EV["DART_FALL"]), "bounce", -6, drums=False)
 # (silence through the fall and the impact)
 groove(fr(EV["DART_HIT"]) + 0.8, T_(22), "bounce", -10, drums=False, melody=False)
 groove(T_(22), T_(23), "bounce", -4, prog=["F", "Bb", "C", "F"])   # the fix: orderly
-groove(T_(23), DUR - 1.2, "golden", -3, prog=["F", "Dm", "Bb", "C"])
-stab(W(245) + 0.05, "F", -3)                                   # button on "down"
-mput(I.timpani(F_(41), 0.7, rm, 2.2), W(245) + 0.05, -8)
+groove(T_(23), DUR - 1.2, "golden", -7, prog=["F", "Dm", "Bb", "C"])
+stab(W(245) + 0.05, "F", -7)                                   # button on "down"
+mput(I.timpani(F_(41), 0.7, rm, 2.2), W(245) + 0.05, -11)
 
 # light room on the music
 ir = make_ir(0.9, 5, hf=0.6)
@@ -598,10 +598,10 @@ for i in range(N):
     duck[i] = g
 M *= duck[None, :]
 vI = integrated(V)
-# base levels: music bed 12 LU and SFX 8 LU under the voice; standard mix then music +3 dB, SFX -6 dB
+# base levels: music bed 12 LU and SFX 2 LU under the voice; standard mix then music +3 dB, SFX -6 dB
 mI, sI = integrated(M), integrated(S)
 M *= dbg((vI - 12) - mI + 3.0)
-S *= dbg((vI - 8) - sI - 6.0)
+S *= dbg((vI - 2) - sI - 6.0)
 mix = V + M + S
 # master: integrated -14 LUFS, then a soft limiter to -1 dBTP
 mix *= dbg(-14.0 - integrated(mix))

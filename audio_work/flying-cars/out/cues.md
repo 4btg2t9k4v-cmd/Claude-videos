@@ -4,11 +4,11 @@ Mix: voice unchanged (gain only), music ducked -3 dB under speech (words.json), 
 
 - length_s: 85.63
 - frames: 2569.00
-- mix_I: -14.54
-- mix_TP: -1.00
+- mix_I: -14.46
+- mix_TP: -1.05
 - voice_I: -20.56
 - music_I: -29.56
-- sfx_I: -34.56
+- sfx_I: -28.55
 
 | time s | frame | cue | note |
 |---|---|---|---|

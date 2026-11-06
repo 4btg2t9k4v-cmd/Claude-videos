@@ -12,9 +12,9 @@ import { TONE, CHAR, untone } from "./shade";
 import { NOINK } from "./ink";
 import { Pool, Actor, Fx, stage } from "./cast";
 import {
-  FPS, SHOTS, ShotDef, camAt, carsAt, planesAt, birdsAt, FOREGROUND, laneShow, LIGHT_RED, LIGHT_AMBER, BUMP6, CONE6, DART_HIT, smooth,
+  FPS, SHOTS, ShotDef, camAt, carsAt, planesAt, birdsAt, FOREGROUND, laneShow, LIGHT_RED, LIGHT_AMBER, BUMP6, CONE6, DART_HIT, smooth, wf, LANES17_Y, LANE17_Z,
 } from "./story";
-import { Fleet, Cessna, Jet, buildSuburb, buildField, buildFood, buildSkyRoad, Lanes, TrafficLight, cone, CONES, dirtMound } from "./sets";
+import { Fleet, Cessna, Jet, buildSuburb, buildField, buildFood, buildSkyRoad, Lanes, TrafficLight, cone, CONES, dirtMound, PlaneLanes } from "./sets";
 
 // ---------------- assets ----------------
 const KENNEY = ["tree_oak", "tree_default", "tree_detailed", "tree_fat", "tree_cone", "tree-high-round", "tree", "plant_bushLarge", "plant_bushDetailed",
@@ -80,7 +80,7 @@ export class World {
   private fleet: Fleet;
   private cessna = new Cessna(); private jets = [new Jet("#3f7fd0"), new Jet("#d94a3a"), new Jet("#2f8a8a"), new Jet("#f08a2c")];
   private skyRoad: THREE.Group; private lanes: Lanes; private tlight = new TrafficLight();
-  private cones: THREE.Group[] = []; private mound = dirtMound();
+  private cones: THREE.Group[] = []; private mound = dirtMound(); private planeLanes = new PlaneLanes(LANES17_Y, LANE17_Z);
   private frustum = new THREE.Frustum();
   private m4 = new THREE.Matrix4(); private v = new THREE.Vector3(); private sph = new THREE.Sphere();
 
@@ -129,7 +129,7 @@ export class World {
     this.skyRoad = buildSkyRoad(R);
     this.lanes = new Lanes(R);
     this.fleet = new Fleet(R);
-    R.add(this.cessna.g, ...this.jets.map((j) => j.g), this.tlight.g, this.mound);
+    R.add(this.cessna.g, ...this.jets.map((j) => j.g), this.tlight.g, this.mound, this.planeLanes.g);
     for (const c of CONES) { const g = cone(); g.position.set(...c); this.cones.push(g); R.add(g); }
     for (const fg of FOREGROUND) {
       const o = kitClone(kit, fg.kit, fg.s ?? 1);
@@ -210,6 +210,11 @@ export class World {
     this.tlight.g.visible = id === 22;
     this.tlight.set(f, f >= LIGHT_RED ? "red" : f >= LIGHT_AMBER ? "amber" : "green");
     this.mound.visible = id === 21 && f >= DART_HIT;
+    this.planeLanes.g.visible = id === 17 && f >= wf(164) - 3;
+    if (id === 17) {
+      const pulse = Math.max(Math.exp(-(((f - wf(169)) / 6) ** 2)), Math.exp(-(((f - wf(171)) / 6) ** 2)));
+      this.planeLanes.set(smooth((f - wf(164) + 3) / 20), pulse);
+    }
     this.cones.forEach((g, i) => {
       g.visible = id === 6;
       if (i === 0) { // the cone the reversing car clips: tips over and rolls away

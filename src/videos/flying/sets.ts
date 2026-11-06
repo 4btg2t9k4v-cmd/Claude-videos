@@ -354,7 +354,14 @@ export const buildField = (root: THREE.Object3D) => {
 export const buildFood = (root: THREE.Object3D, kit: Kit) => {
   const b = new Batch(), [X, , Z] = FOOD;
   b.add(quadUp(X - 22, X + 22, Z - 20, Z + 18, 44 / 4.8, 38 / 4.8, 0.04), lam("plaza", () => ({ map: tilesHD() })));
-  b.add(boxGeo(V(X - 24, 0, Z + 17), V(X + 24, 10, Z + 19), 6), lam("mallWall", () => ({ map: facadeHD("mallWall", 48, 10, { wall: "#e6d2ac", shutter: "#3f6fb5", door: true }) })));
+  // the mall: warm wall, a cornice band, tall shop windows
+  b.add(boxGeo(V(X - 24, 0, Z + 17), V(X + 24, 10, Z + 19), 6), lam("mallWall", () => ({ color: "#e9d5ae" })));
+  b.add(boxGeo(V(X - 24.3, 8.6, Z + 16.7), V(X + 24.3, 9.4, Z + 19.2)), lam("mallBand", () => ({ color: "#c96f55" })));
+  for (let k = 0; k < 7; k++) {
+    const wx = X - 20.4 + k * 6.8;
+    b.add(boxGeo(V(wx - 2.2, 5.6, Z + 16.9), V(wx + 2.2, 8.0, Z + 17.0)), lam("mallGlass", () => ({ color: "#6f93c9" })));
+    b.add(boxGeo(V(wx - 2.4, 5.4, Z + 16.85), V(wx + 2.4, 5.6, Z + 17.05)), tone("#efe8d8"));
+  }
   const cols = ["#d94a3a", "#f2c14e", "#3f7fd0", "#4fae6a"];
   [-12, -4, 4, 12].forEach((sx, k) => {
     const x = X + sx, col = cols[k];
@@ -431,7 +438,7 @@ export class Lanes {
   mesh: THREE.InstancedMesh; private pts: { x: number; z: number }[] = [];
   constructor(root: THREE.Object3D) {
     for (const x of LANES_X) for (let z = -150; z < 330; z += 6) this.pts.push({ x, z });
-    this.mesh = new THREE.InstancedMesh(new RoundedBoxGeometry(0.2, 0.05, 3, 2, 0.02), new THREE.MeshBasicMaterial({ color: HDR(1.6, 1.9, 2.2) }), this.pts.length);
+    this.mesh = new THREE.InstancedMesh(new RoundedBoxGeometry(0.42, 0.1, 3.4, 2, 0.04), new THREE.MeshBasicMaterial({ color: HDR(2.2, 2.6, 3.0) }), this.pts.length);
     this.mesh.frustumCulled = false; this.mesh.layers.set(NOINK);
     root.add(this.mesh);
   }
@@ -495,3 +502,26 @@ export const dirtMound = () => {
   }
   return g;
 };
+
+/** shot 17: every flight its own glowing lane and altitude (ribbons along x under each airliner) */
+export class PlaneLanes {
+  g = new THREE.Group(); private ribbons: { m: THREE.Mesh; mat: THREE.MeshBasicMaterial; base: THREE.Color }[] = [];
+  constructor(ys: number[], z: number) {
+    const cols = [HDR(0.35, 1.1, 1.6), HDR(1.5, 1.1, 0.35), HDR(0.45, 1.4, 0.7), HDR(1.4, 0.5, 0.9)];
+    ys.forEach((y, i) => {
+      const mat = new THREE.MeshBasicMaterial({ color: cols[i % 4].clone(), transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 4.2).rotateX(-Math.PI / 2).translate(0.5, 0, 0), mat);
+      m.position.set(150, y - 2.6, z); m.layers.set(NOINK); m.renderOrder = 4;
+      this.g.add(m); this.ribbons.push({ m, mat, base: cols[i % 4].clone() });
+      for (const s of [-1, 1]) {
+        const e = new THREE.Mesh(new THREE.BoxGeometry(1, 0.08, 0.12).translate(0.5, 0, 0), new THREE.MeshBasicMaterial({ color: cols[i % 4].clone().multiplyScalar(1.6) }));
+        e.position.set(150, y - 2.6, z + s * 2.1); e.layers.set(NOINK); this.g.add(e);
+        this.ribbons.push({ m: e, mat: e.material as THREE.MeshBasicMaterial, base: cols[i % 4].clone().multiplyScalar(1.6) });
+      }
+    });
+  }
+  /** draw-on 0..1 along x, pulse 0..1 brightness boost */
+  set(draw: number, pulse: number) {
+    for (const r of this.ribbons) { r.m.scale.x = Math.max(0.001, 650 * draw); r.mat.color.copy(r.base).multiplyScalar(1 + 1.2 * pulse); }
+  }
+}

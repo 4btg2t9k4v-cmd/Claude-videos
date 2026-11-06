@@ -339,7 +339,7 @@ const people = (id: number, f: number, cam: CamInfo, out: Stage) => {
         const s: V3 = [DART[0] + 1.25, 0, DART[2] + 1.6];
         out.places.push(person(cam, { i: 210, o: OUT.dart, okey: "dart" }, s[0], 0, s[2], { side: false, mirror: false }, { mode: "sit", expr: "dazed", blink: lidAt(f, 210) }, {}));
         blob(out, s[0], 0, s[2], 1.1);
-        starsAt(out, [s[0], 1.75, s[2]], f);
+        starsAt(out, [s[0], 1.42, s[2]], f, 0.6);
         const u = (f - DART_HIT) / 20;
         if (u < 1) out.fx.push({ key: `dirt${q(u, 30)}`, cw: 600, ch: 400, draw: (p) => fxDirt(p, q(u, 30)), x: DART[0], y: 1.0, z: DART[2] + 1.0, w: 4.2, h: 2.8 });
       }
@@ -420,7 +420,7 @@ export const stage = (id: number, f: number, cam: CamInfo, cars: CarP[], planes:
     const hit = wf(107) - 1, jet = planes[0];
     if (jet && f >= hit) {
       const p = local(jet, [0, 0.6, 17.4]);
-      burstAt(out, f, hit, p, 2.2, 7, "#ffffff");
+      burstAt(out, f, hit, p, 2.6, 8, "#ffd84a");
       const u = (f - hit) / 30;
       if (u < 1) out.fx.push({ key: `feathers${q(u, 30)}`, cw: 400, ch: 400, draw: (pp) => fxFeathers(pp, q(u, 30)), x: p[0] - 10 * u, y: p[1], z: p[2] - 1.2, w: 3.2, h: 3.2 });
       const b = bs[0];
@@ -443,7 +443,7 @@ export const stage = (id: number, f: number, cam: CamInfo, cars: CarP[], planes:
   if (id === 15 && you && at(f, 145)) sweat(out, local(you, [SEAT[0] - 0.3, SEAT[1] + HEAD_Y + 0.35, SEAT[2]]), f);
   if (id === 22) {
     // the ticket: flies from the cop's window into yours and sticks to the door
-    const u = clamp01((f - TICKET) / 10), a: V3 = [-4 + 0.95, 31.35, YOU22[2] - 0.3], b: V3 = [YOU22[0] - 0.95, 31.1, YOU22[2] + 0.25];
+    const u = clamp01((f - TICKET) / 10), a: V3 = [-4 + 0.95, 31.45, YOU22[2] - 0.3], b: V3 = [YOU22[0] + 0.15, 31.62, YOU22[2] + 0.66];
     if (f >= TICKET) out.fx.push({ key: "ticket", cw: 200, ch: 260, draw: fxTicket, x: a[0] + (b[0] - a[0]) * u, y: a[1] + (b[1] - a[1]) * u + 0.5 * Math.sin(u * Math.PI), z: a[2] + (b[2] - a[2]) * u,
       w: 0.32, h: 0.42, rot: (1 - u) * 5 + 0.15 });
   }

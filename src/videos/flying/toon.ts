@@ -998,13 +998,13 @@ export const fxBird = (p: Pen, flap: number, mood: "angry" | "shock" | "dazed") 
 
 /** car horn blast on a 400 x 400 canvas: rays + two expanding arcs, t in 0..1 */
 export const fxHonk = (p: Pen, t: number) => {
-  const c = 200, e = 0.35 + 0.65 * t;
-  for (let i = 0; i < 9; i++) {
-    const a = rad(i * 40 + 10), r0 = 60 * e, r1 = 150 * e;
-    p.stroke([[c + r0 * Math.cos(a), c + r0 * Math.sin(a)], [c + r1 * Math.cos(a), c + r1 * Math.sin(a)]], 13 * (1.2 - t), "#fff6c9");
-    p.stroke([[c + r0 * Math.cos(a), c + r0 * Math.sin(a)], [c + r1 * Math.cos(a), c + r1 * Math.sin(a)]], 5 * (1.2 - t));
+  const c = 200, e = 0.55 + 0.45 * t, w = 1.15 - 0.6 * t;
+  for (let i = 0; i < 10; i++) {
+    const a = rad(i * 36 + 8), r0 = 70 * e, r1 = (i % 2 ? 150 : 185) * e;
+    const pts: P2[] = [[c + r0 * Math.cos(a - 0.09), c + r0 * Math.sin(a - 0.09)], [c + r1 * Math.cos(a), c + r1 * Math.sin(a)], [c + r0 * Math.cos(a + 0.09), c + r0 * Math.sin(a + 0.09)]];
+    p.poly(pts, "#fff3b0", 7 * w);
   }
-  for (const k of [0.6, 0.85]) p.arc(c, c, 175 * e * k, 175 * e * k, 0, 360, 6 * (1.1 - t), "#fff6c9");
+  p.ell(c, c, 34 * e, 34 * e, "#fff3b0", 7 * w);
 };
 
 /** confetti burst on a 600 x 600 canvas, t in 0..1 */
