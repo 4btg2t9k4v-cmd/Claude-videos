@@ -220,10 +220,13 @@ const drivers = (cam: CamInfo, f: number, cars: CarP[], out: Stage) => {
     if (d > 70) continue;
     if (c.id === 210 && f >= DART_HIT) continue; // thrown clear of the lawn dart (placed by the shot)
     const [o, okey] = outfitOf(c.d.outfit, c.d.i);
-    const s = local(c, SEAT);
+    const s = local(c, c.d.rhd ? [-SEAT[0], SEAT[1], SEAT[2]] : SEAT);
     const lid = Math.max(lidAt(f, c.d.i), blinkSwap(c.d.i, f, c.d.expr));
     const fo: FrontOpts = { mode: "sit", expr: c.d.expr, look: c.d.look ?? 0, blink: lid, wave: c.d.wave === undefined ? undefined : q(c.d.wave, 24) };
-    out.places.push({ ...person(cam, { i: c.d.i, o, okey }, s[0], s[1], s[2], { side: false, mirror: false }, fo, {}, 0.92), roll: seatRoll(cam, c) });
+    // a little life in the seat: slow sway, faster when shouting or laughing
+    const lively = c.d.expr === "angry" || c.d.expr === "laugh" || c.d.expr === "shock" ? 2.6 : 1;
+    const sway = 0.028 * Math.sin((f / FPS) * 2.1 * lively + c.d.i * 1.3);
+    out.places.push({ ...person(cam, { i: c.d.i, o, okey }, s[0], s[1], s[2], { side: false, mirror: false }, fo, {}, 0.92), roll: seatRoll(cam, c) + sway });
     if (c.d.stars) starsAt(out, local(c, [SEAT[0], SEAT[1] + HEAD_Y + 0.45, SEAT[2]]), f);
   }
 };
@@ -238,13 +241,13 @@ const carFx = (f: number, cars: CarP[], out: Stage) => {
       out.fx.push({ key: `honk${u}`, cw: 400, ch: 400, draw: (pp) => fxHonk(pp, u), x: p[0], y: p[1], z: p[2], w: 1.4, h: 1.4 });
     }
     if (c.anger) {
-      const u = q((f / FPS * 1.8 + c.id * 0.3) % 1, 20), p = local(c, [SEAT[0] + 0.25, SEAT[1] + HEAD_Y + 0.62, SEAT[2]]);
+      const u = q((f / FPS * 1.8 + c.id * 0.3) % 1, 20), p = local(c, [(c.d?.rhd ? -1 : 1) * SEAT[0] + 0.25, SEAT[1] + HEAD_Y + 0.62, SEAT[2]]);
       out.fx.push({ key: `anger${u}`, cw: 300, ch: 300, draw: (pp) => fxAnger(pp, u), x: p[0], y: p[1], z: p[2], w: 0.48, h: 0.48 });
     }
     if (c.smoke) {
       for (const k of [0, 0.5]) {
         const u = q((f / FPS * 0.9 + k) % 1, 30), p = local(c, [0, 1.1, 1.5]);
-        out.fx.push({ key: `smoke${u}`, cw: 300, ch: 420, draw: (pp) => fxSmoke(pp, u), x: p[0] + 0.2 * k, y: p[1] + 0.6, z: p[2], w: 1.6, h: 2.24, soft: true });
+        out.fx.push({ key: `smoke${u}`, cw: 300, ch: 420, draw: (pp) => fxSmoke(pp, u), x: p[0] + 0.2 * k, y: p[1] + 0.7, z: p[2], w: 1.7, h: 2.38 });
       }
     }
   }

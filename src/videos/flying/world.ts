@@ -119,6 +119,7 @@ export class World {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: this.cloudMaps.day[i % 4], color: new THREE.Color(1.1, 1.1, 1.1), transparent: true, depthWrite: false, fog: false }));
       const w = far ? 130 + (i % 4) * 30 : 70 + (i % 3) * 25;
       m.position.set(Math.cos(a) * d, far ? 120 + (i % 4) * 38 : 115 + (i % 5) * 22, Math.sin(a) * d); m.scale.set(w, w / 2, 1);
+      m.userData.home = m.position.clone();
       m.layers.set(NOINK); m.renderOrder = -0.8;
       this.clouds.push(m); R.add(m);
     }
@@ -199,6 +200,7 @@ export class World {
     }
     for (let i = 0; i < this.clouds.length; i++) {
       const m = this.clouds[i], mat = m.material as THREE.MeshBasicMaterial;
+      m.position.copy(m.userData.home).add(this.v.set(0.9 * t, 0, 0.35 * t)); // slow drift
       m.lookAt(cam.position.x, m.position.y, cam.position.z);
       mat.map = this.cloudMaps[s.light][i % 4];
     }

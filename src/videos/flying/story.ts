@@ -95,7 +95,7 @@ export const local = (p: Pose, v: V3): V3 => {
 export const SEAT: V3 = [0.42, 0.62, 0.05]; // driver card base (left seat, raised cushion)
 export const HEAD_Y = 0.79;                  // driver head centre above the seat base (card scale 0.92)
 export type Kind = "car" | "police" | "old";
-export type Drv = { i: number; expr: Expr; wave?: number; look?: number; outfit?: string; stars?: boolean };
+export type Drv = { i: number; expr: Expr; wave?: number; look?: number; outfit?: string; stars?: boolean; rhd?: boolean };
 export type CarP = Pose & { id: number; col: string; kind: Kind; fly: number; d?: Drv; honk?: number; smoke?: number; anger?: boolean };
 export type PlaneP = Pose & { kind: "cessna" | "jet"; pilot?: Drv; prop?: number };
 export type BirdP = { x: number; y: number; z: number; flap: number; mood: "angry" | "shock" | "dazed"; s: number; rot?: number; mirror?: boolean };
@@ -234,10 +234,11 @@ export const CUBE_X = [-6.6, -2.2, 2.2, 6.6], CUBE_Y = [30, 32.4, 34.8];
 export const youCube = (f: number): Pose => {
   const f0 = A(129) + 8, f1 = wf(138) + 8;
   const u = smooth((f - f0) / (f1 - f0));
-  const x = lerp(10.5, 2.2, u);
   const b1 = Math.exp(-(((f - wf(134)) / 4) ** 2)), b2 = Math.exp(-(((f - wf(137)) / 4) ** 2));
-  const y = 32.4 + 0.42 * b1 - 0.42 * b2 + 0.12 * Math.sin(T(f) * 5) * (1 - u);
-  return pose(x, y, CUBE_Z + 0.15 * Math.sin(T(f) * 3.3) * (1 - u), 0.06 * Math.sin(T(f) * 4.1) * (1 - u), 0.05 * (b2 - b1), 0.08 * (b1 - b2));
+  const wob = (1 - u) * Math.sin(T(f) * 4.3);
+  const x = 2.2 + 0.7 * wob;
+  const y = 32.4 + 0.42 * b1 - 0.42 * b2 + 0.25 * (1 - u) * Math.sin(T(f) * 5.1);
+  return pose(x, y, lerp(CUBE_Z + 10, CUBE_Z, u), 0.12 * wob, 0.05 * (b2 - b1), 0.08 * (b1 - b2) + 0.04 * wob);
 };
 // shot 15: hovering, wondering
 export const YOU15: V3 = [0, 30, 0];
@@ -326,10 +327,10 @@ export const carsAt = (id: number, f: number): CarP[] => {
     }
     case 8: {
       const y = rageY(f), shake = (i: number) => Math.sin(T(f) * 13 + i);
-      out.push({ ...pose(-1.35, y + bob(4, f), 0, 0.05, 0, 0.02 * shake(1)), id: 81, col: "#3f7fd0", kind: "car", fly: 1, anger: true,
+      out.push({ ...pose(-1.2, y + bob(4, f), 0, 0.12, 0, 0.02 * shake(1)), id: 81, col: "#3f7fd0", kind: "car", fly: 1, anger: true,
         d: { i: 81, outfit: "rageA", expr: "angry", wave: shake(2) } });
-      out.push({ ...pose(1.35, y + bob(5, f), 0.4, -0.05, 0, 0.02 * shake(3)), id: 82, col: "#f2c14e", kind: "car", fly: 1, anger: true,
-        d: { i: 82, outfit: "rageB", expr: "angry", wave: shake(4) } });
+      out.push({ ...pose(1.2, y + bob(5, f), 0.4, -0.12, 0, 0.02 * shake(3)), id: 82, col: "#f2c14e", kind: "car", fly: 1, anger: true,
+        d: { i: 82, outfit: "rageB", expr: "angry", wave: shake(4), rhd: true } });
       flow(f, out, { xs: [-9, 9], ys: [22, 30, 38], v: 0, z0: -60, z1: 60, gap: 14, seed: 8000, ref: 6 * T(f) });
       break;
     }
@@ -386,7 +387,7 @@ export const carsAt = (id: number, f: number): CarP[] => {
         const yaw = (hh(lid, 3) - 0.5) * 1.6 * (1 - k);
         const z = rz + ref22(f) + (hh(lid, 4) - 0.5) * 4 * (1 - k);
         if (z > LIGHT_AT[2] - 14) continue;
-        if (Math.abs(z - (ref22(f) + 30)) < 7 && lx <= 0) continue; // keep you and the cop clear
+        if (z - (ref22(f) + 30) > -7 && z - (ref22(f) + 30) < 18 && lx <= 0) continue; // keep you, the cop and the lens clear
         out.push({ ...pose(cx, cy + bob(lid, f) * (1 - k), z, yaw), id: lid, col: pal(lid), kind: "car", fly: 1,
           d: { i: lid, expr: k < 0.5 ? "nervous" : "smile" } });
       }
@@ -428,7 +429,7 @@ export const planesAt = (id: number, f: number): PlaneP[] => {
   switch (id) {
     case 5: out.push({ ...cessna5(f), kind: "cessna", prop: f, pilot: { i: 50, outfit: "student", expr: at(f, 55) ? "stern" : at(f, 52) ? "nervous" : "smile" } }); break;
     case 11: out.push({ ...jet11(f), kind: "jet" }); break;
-    case 15: out.push({ ...pose(-125 + 62 * T(f - A(139)), 62, -110, Math.PI / 2), kind: "jet" }); break;
+    case 15: out.push({ ...pose(-52 + 25 * T(f - A(139)), 62, -110, Math.PI / 2), kind: "jet" }); break;
     case 16: out.push({ ...PARKED_CESSNA, kind: "cessna", prop: 0 }); break;
     case 17: {
       out.push({ ...PARKED_CESSNA, kind: "cessna", prop: 0 });
@@ -461,7 +462,7 @@ export const birdsAt = (id: number, f: number): BirdP[] => {
         else { const u = T(f - hit); out.push({ x: j.x + 17.9 + 1.2 * u - 9 * Math.max(0, u - 0.5) ** 2, y: 160.6 + 1.4 * u - 1.6 * u * u, z: -0.4 - 2.2 * u, flap: 0, mood: "dazed", s: 1.1, rot: u * 7 }); }
         continue;
       }
-      out.push({ x: bx, y: by + scat * Math.sign(hh(i, 4) - 0.5), z: bz + scat * Math.sign(bz || 1) * 1.4, flap: flap(i, near ? 16 : 9), mood: near ? "shock" : "angry", s: 1.3, mirror: true });
+      out.push({ x: bx, y: by + scat * Math.sign(hh(i, 4) - 0.5), z: bz + scat * Math.sign(bz || 1) * 1.4, flap: flap(i, near ? 16 : 9), mood: near ? "shock" : "angry", s: 2.2, mirror: true });
     }
   }
   if (id === 12) {
@@ -553,7 +554,7 @@ const CAMS: Record<number, Key[]> = {
   ],
   9: [
     { f: A(92), s: (f) => dolly([2.2, 0.9, -21.5], [5.0, 3.2, -14.0], pushK(f, A(92), 0.0022), { fov: 52 }) },
-    { f: wf(95) - 2, cut: true, s: (f) => dolly([6.1, 0.4, -11.9], [4.6, 5.0, -15.2], pushK(f, wf(95) - 2, 0.0022, 0.006, 30), { fov: 54, roll: 0.04 }) },
+    { f: wf(95) - 2, cut: true, s: (f) => dolly([6.1, 0.4, -11.9], [4.6, 3.9, -15.2], pushK(f, wf(95) - 2, 0.0022, 0.006, 30), { fov: 54, roll: 0.04 }) },
   ],
   10: [
     { f: A(101), s: (f) => dolly([0.1, 26.35, -4.3], [0, 26.2, 0.6], pushK(f, A(101), 0.0025, 0.0065, 30), { fov: 40 }) },

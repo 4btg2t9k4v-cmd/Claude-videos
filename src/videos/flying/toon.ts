@@ -535,6 +535,11 @@ export const bodyFront = (p: Pen, o: Outfit, opts: FrontOpts) => {
       arms.push({ pts: [S, E, Hd], front: true });
     } else arms.push({ pts: hang(1, sw), front: false });
   }
+  if (mode === "sit" && wave !== undefined) { // seated wave / fist shake (drivers)
+    arms.pop();
+    const S = sh(1);
+    arms.push({ pts: [S, [tcx + 1.1 * T.a + 10 * u + 3 * u * wave, S[1] - 0.2 * HH], [tcx + 1.15 * T.a + 14 * u + 12 * u * wave, S[1] - 0.55 * HH]], front: false });
+  }
   const drawArm = (a: Arm) => { p.stroke(curve(a.pts[0], a.pts[1], a.pts[2]), 5.2 * u, armCol); p.dot(a.pts[2][0], a.pts[2][1], 5.5 * u); };
   // behind the body: rifle, sword, arms
   if (rifle) {
@@ -1032,8 +1037,12 @@ export const fxAnger = (p: Pen, t: number) => {
 /** dark engine smoke puffs rising on a 300 x 420 canvas, t in 0..1 (loops) */
 export const fxSmoke = (p: Pen, t: number) => {
   for (let i = 0; i < 4; i++) {
-    const u = (t + i * 0.25) % 1, r = 30 + 70 * u, y = 380 - 320 * u, x = 150 + 25 * Math.sin(u * 7 + i);
-    p.ell(x, y, r, r * 0.85, `rgba(${110 + 60 * u | 0},${110 + 60 * u | 0},${118 + 60 * u | 0},${(0.9 * (1 - u)).toFixed(3)})`, 0);
+    const u = (t + i * 0.25) % 1, r = (26 + 62 * Math.sqrt(u)) * (u > 0.82 ? 1 - (u - 0.82) / 0.18 : 1), y = 370 - 300 * u, x = 150 + 26 * Math.sin(u * 7 + i);
+    if (r < 3) continue;
+    const g = Math.round(96 + 110 * u);
+    const col = "#" + [g, g, g + 8].map((v) => Math.min(255, v).toString(16).padStart(2, "0")).join("");
+    p.ell(x, y, r, r * 0.86, col, 6);
+    p.ell(x - r * 0.3, y - r * 0.3, r * 0.35, r * 0.25, "#" + [g + 30, g + 30, g + 36].map((v) => Math.min(255, v).toString(16).padStart(2, "0")).join(""), 0);
   }
 };
 
