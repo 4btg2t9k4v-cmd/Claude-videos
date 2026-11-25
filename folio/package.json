@@ -1,0 +1,16 @@
+{
+  "name": "folio-study",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "pawnote": "^1.6.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "jsqr": "^1.4.0"
+  }
+}

@@ -4,8 +4,10 @@ import { go, menuButton, savePill } from '../main.js';
 import { coverEl, notebookDialog } from './nbdialogs.js';
 import { hasAI, generate } from '../ai/gemini.js';
 import { renderMarkdown } from '../tools/md.js';
+import { schoolData } from '../school/store.js';
 
 const SECTIONS = {
+  school: { title: 'School', size: 'full' },
   continue: { title: 'Pick up where you left off', size: 'full' },
   notebooks: { title: 'My notebooks', size: 'full' },
   recentPages: { title: 'Recent pages', size: 'half' },
@@ -14,6 +16,12 @@ const SECTIONS = {
   reminders: { title: 'Coming up', size: 'half' },
   suggestions: { title: 'What to study next', size: 'full' },
 };
+
+/** Saved layout plus sections added since it was saved; School goes first. */
+function withNew(order) {
+  const missing = Object.keys(SECTIONS).filter((k) => !order.includes(k));
+  return [...missing.filter((k) => k === 'school'), ...order, ...missing.filter((k) => k !== 'school')];
+}
 
 export function notebookMenu(anchor, n) {
   menu(anchor, [
@@ -76,6 +84,7 @@ export async function render(main) {
       ),
     );
     if (!notebooks().length) {
+      pad.append(h('section.hs', { style: { marginBottom: '18px' } }, h('div.section-head', h('h2', 'School')), schoolSection()));
       pad.append(welcome());
       return;
     }
@@ -87,7 +96,7 @@ export async function render(main) {
     const grid = h('div.home-grid' + (editing ? '.editing' : ''));
     const { order, hidden } = S.settings.dashboard;
     const sizes = S.settings.dashboard.sizes || {};
-    const all = [...order, ...Object.keys(SECTIONS).filter((k) => !order.includes(k))];
+    const all = withNew(order);
     all.forEach((key, i) => {
       if (!SECTIONS[key]) return;
       const off = hidden.includes(key);
@@ -107,7 +116,7 @@ export async function render(main) {
   };
 
   function move(key, d) {
-    const order = [...S.settings.dashboard.order, ...Object.keys(SECTIONS).filter((k) => !S.settings.dashboard.order.includes(k))];
+    const order = withNew(S.settings.dashboard.order);
     const i = order.indexOf(key);
     const j = i + d;
     if (j < 0 || j >= order.length) return;
@@ -124,6 +133,7 @@ export async function render(main) {
 
   function sectionBody(key) {
     switch (key) {
+      case 'school': return schoolSection();
       case 'continue': return continueSection();
       case 'notebooks': return h('div.hs-body.bare', h('div.covers', notebooks().map(notebookCard), newNotebookTile()));
       case 'recentPages': return recentPages();
@@ -225,6 +235,29 @@ function activity() {
       h('div.stat', h('b', String(streak())), h('span', 'day streak')),
       h('div.stat', h('b', String(Math.round(min))), h('span', 'minutes this week')),
       h('div.stat', h('b', String(cards)), h('span', 'cards reviewed this week'))));
+}
+
+function schoolSection() {
+  const body = h('div.hs-body');
+  const data = schoolData();
+  if (!data.pronote && !data.classroom) {
+    body.append(h('div.list-row', { style: { padding: '8px 4px' } }, h('span', { html: ic('grad'), style: { color: 'var(--accent)' } }),
+      h('div.lr-main', h('div.lr-title', 'Connect Pronote or Google Classroom'), h('div.lr-sub', 'See homework, tests and lessons here, and turn them into flashcards in one tap.')),
+      h('a.btn.sm.primary', { href: '#/school' }, 'Connect')));
+    return body;
+  }
+  import('./school.js').then(({ upcomingTests, homeworkList, dayLabel }) => {
+    const tests = upcomingTests().slice(0, 3);
+    const hw = homeworkList();
+    const soon = hw.filter((x) => x.due && x.due < Date.now() + 2 * 86400000);
+    for (const t of tests) {
+      body.append(h('a.list-row', { href: '#/school', style: { padding: '8px 4px' } }, h('span', { html: ic('flag'), style: { color: 'var(--accent)' } }),
+        h('div.lr-main', h('div.lr-title', 'Test: ' + t.subject.charAt(0) + t.subject.slice(1).toLowerCase()), h('div.lr-sub', dayLabel(t.start) + ' · tap to revise'))));
+    }
+    body.append(h('a.list-row', { href: '#/school', style: { padding: '8px 4px' } }, h('span', { html: ic('list-checks'), style: { color: 'var(--accent)' } }),
+      h('div.lr-main', h('div.lr-title', hw.length ? `${hw.length} homework to do` : 'No homework to do'), h('div.lr-sub', soon.length ? `${soon.length} due in the next two days` : 'Open School for your timetable, grades and lessons'))));
+  });
+  return body;
 }
 
 function reminders() {

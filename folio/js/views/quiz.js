@@ -53,10 +53,10 @@ function listView(pad) {
     ]))))));
 }
 
-export function quizSetupDialog({ notebookId = '', folderId = '', pageId = '' } = {}) {
+export function quizSetupDialog({ notebookId = '', folderId = '', pageId = '', text = '', name = '', files: attached = [] } = {}) {
   if (!hasAI()) { toast('Add your Gemini key in Settings → AI first.', { action: { label: 'Open', run: () => go('#/settings/ai') } }); return; }
   const nbs = notebooks();
-  let source = pageId ? 'page' : folderId ? 'folder' : 'notebook';
+  let source = text ? 'text' : pageId ? 'page' : folderId ? 'folder' : 'notebook';
   let nbId = notebookId || nbs[0]?.id || '';
   let difficulty = 'medium';
   let explain = true;
@@ -65,6 +65,8 @@ export function quizSetupDialog({ notebookId = '', folderId = '', pageId = '' } 
   const count = h('input.field', { type: 'number', min: 3, max: 40, value: 10 });
   const topic = h('input.field', { type: 'text', placeholder: 'Optional — e.g. “only enzymes”, “chapter 4”' });
   const pasted = h('textarea.field', { rows: 5, placeholder: 'Paste material to be quizzed on' });
+  pasted.value = text;
+  const attachedNote = () => (attached.length ? h('p.muted', { style: { margin: '6px 0 0', fontSize: '13px' } }, `+ ${attached.length} attached file${attached.length === 1 ? '' : 's'} from school`) : '');
   const srcHost = h('div');
   const nbSel = select(nbs.map((n) => ({ value: n.id, label: n.title })), nbId, (v) => { nbId = v; drawSrc(); });
   let pageSel, folderSel;
@@ -73,7 +75,7 @@ export function quizSetupDialog({ notebookId = '', folderId = '', pageId = '' } 
     if (['notebook', 'page', 'folder'].includes(source)) srcHost.append(nbs.length ? field('Notebook', nbSel) : h('p.muted', 'Create a notebook first.'));
     if (source === 'page') { pageSel = select(pagesOf(nbId).map((p) => ({ value: p.id, label: p.title || 'Untitled page' })), pageId || pagesOf(nbId)[0]?.id, () => {}); srcHost.append(field('Page', pageSel)); }
     if (source === 'folder') { const fs = S.notebooks.get(nbId)?.folders || []; folderSel = select(fs.map((f) => ({ value: f.id, label: f.name })), folderId || fs[0]?.id, () => {}); srcHost.append(fs.length ? field('Section / chapter', folderSel) : h('p.muted', 'This notebook has no sections yet.')); }
-    if (source === 'text') srcHost.append(pasted);
+    if (source === 'text') srcHost.append(pasted, attachedNote());
     if (source === 'file') srcHost.append(h('div.dropzone', file ? h('div.file-chip', h('span', file.name), iconBtn('x', 'Remove', () => { file = null; drawSrc(); }, 'sm')) : h('button.btn.sm', { type: 'button', html: ic('upload') + '<span>Choose a document</span>', on: { click: async () => { file = await pickFile(ACCEPT); drawSrc(); } } })));
   }
   drawSrc();
@@ -95,7 +97,7 @@ export function quizSetupDialog({ notebookId = '', folderId = '', pageId = '' } 
     if (!types.size) return toast('Pick at least one question type.');
     let material = '', title = '', files = [];
     try {
-      if (source === 'text') { material = pasted.value.trim(); title = 'Quiz'; }
+      if (source === 'text') { material = pasted.value.trim(); files.push(...attached); title = name || 'Quiz'; }
       else if (source === 'file') { if (!file) return toast('Choose a document first.'); const m = await readMaterial(file); if (m.part) files.push(m.part); material = m.text || ''; title = file.name.replace(/\.\w+$/, ''); }
       else {
         const nb = S.notebooks.get(nbId);

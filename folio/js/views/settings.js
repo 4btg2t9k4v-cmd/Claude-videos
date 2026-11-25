@@ -4,6 +4,37 @@ import { menuButton, THEMES, applyTheme } from '../main.js';
 import { connectKey, listModels, generate } from '../ai/gemini.js';
 import { SHORTCUTS, bindingFor, comboOf, prettyCombo } from '../shortcuts.js';
 import { LANGS } from './nbdialogs.js';
+import { getAuth, schoolData } from '../school/store.js';
+import { disconnectPronote } from '../school/pronote.js';
+import { disconnectClassroom, isClassroomSetUp } from '../school/classroom.js';
+import { GOOGLE_CLIENT_ID } from '../school/config.js';
+
+/** Settings → School connections: who is connected, disconnect, and the Google client ID for Classroom. */
+function schoolGroup(row) {
+  const host = h('div.set-card');
+  const draw = () => {
+    const a = getAuth();
+    const d = schoolData();
+    host.innerHTML = '';
+    const p = d.pronote?.student;
+    host.append(
+      row('Pronote', a.pronote ? `Connected${p ? ' as ' + p.name : ''}${a.pronote.password ? ' · stays signed in on this device' : ''}` : 'Not connected',
+        a.pronote
+          ? h('button.btn.sm', { type: 'button', text: 'Disconnect', on: { click: async () => { if (await confirmDialog('Disconnect Pronote? Your homework and grades will be removed from this device.', { okLabel: 'Disconnect', danger: true })) { disconnectPronote(); setTimeout(draw, 50); } } } })
+          : h('a.btn.sm', { href: '#/school' }, 'Connect')),
+      row('Google Classroom', a.classroom ? 'Connected' : isClassroomSetUp() ? 'Not connected' : 'Not available until a Google client ID is added below',
+        a.classroom
+          ? h('button.btn.sm', { type: 'button', text: 'Disconnect', on: { click: async () => { if (await confirmDialog('Disconnect Google Classroom?', { okLabel: 'Disconnect', danger: true })) { disconnectClassroom(); setTimeout(draw, 50); } } } })
+          : isClassroomSetUp() ? h('a.btn.sm', { href: '#/school' }, 'Connect') : null),
+      row('Google client ID (developer)', 'Needed once per copy of the app for Google Classroom. See SCHOOL.md.',
+        h('input.field', { type: 'text', value: S.settings.school?.googleClientId || '', placeholder: GOOGLE_CLIENT_ID || '….apps.googleusercontent.com', style: { maxWidth: '300px' }, on: { change: (e) => { setSetting('school.googleClientId', e.target.value.trim()); draw(); } } })),
+    );
+  };
+  draw();
+  return h('section.set-group', { id: 'school' }, h('h2', 'School connections'),
+    h('p.muted', { style: { marginTop: '-6px' } }, 'Your school data stays on this device. Pronote requests pass through the app’s relay because browsers can’t reach Pronote directly; it stores nothing.'),
+    host);
+}
 
 const THEME_PREVIEW = {
   light: ['#F3EFE7', '#FAF7F1', '#FFFDF7', '#33506E'],
@@ -123,6 +154,7 @@ export async function render(main, { section } = {}) {
       h('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } }, h('div', { style: { flex: '1 1 260px' } }, keyIn), connect, S.settings.ai.key ? test : null, S.settings.ai.key ? remove : null),
       aiStatus, h('div', { style: { marginTop: '14px' } }, modelHost),
       h('p.faint', { style: { fontSize: '12.5px', marginBottom: 0 } }, 'On Google’s free tier, requests may be used by Google to improve its products. Avoid sending anything private. Without a key, notes, handwriting, tables and the dictionary still work; translation falls back to MyMemory.'))),
+    schoolGroup(row),
     h('section.set-group', { id: 'writing' }, h('h2', 'Writing & language'), h('div.set-card',
       row('Default writing language', 'Each notebook and page can override this.', select(LANGS, S.settings.writingLang, (v) => setSetting('writingLang', v), 'sm')),
       row('Autocorrect while typing', 'Fixes common misspellings and missing accents in English, Arabic, Spanish and French.', sw(S.settings.autocorrect, (v) => setSetting('autocorrect', v))),

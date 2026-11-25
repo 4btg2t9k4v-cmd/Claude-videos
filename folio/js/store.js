@@ -32,7 +32,7 @@ export const DEFAULT_SETTINGS = {
   liveCheck: false,
   pencilOnly: false,
   shortcuts: {},
-  dashboard: { order: ['continue', 'notebooks', 'recentPages', 'favorites', 'activity', 'reminders', 'suggestions'], hidden: [] },
+  dashboard: { order: ['school', 'continue', 'notebooks', 'recentPages', 'favorites', 'activity', 'reminders', 'suggestions'], hidden: [] },
   timer: { focus: 25, short: 5, long: 15 },
   translator: { target: 'es', source: 'auto', tint: 'theme' },
   editorDefaults: { font: 'Newsreader', size: 18 },
@@ -361,8 +361,8 @@ export function deleteReminder(id) { S.reminders = S.reminders.filter((r) => r.i
 export async function exportAll() {
   const out = { app: 'study-notebook', version: 1, exportedAt: Date.now() };
   for (const s of STORES) out[s] = await idb.all(s);
-  // never put the API key into a backup file
-  out.kv = out.kv.map((r) => (r.id === 'settings' ? { ...r, ai: { ...(r.ai || {}), key: '' } } : r));
+  // never put the API key or school logins into a backup file
+  out.kv = out.kv.filter((r) => r.id !== 'schoolAuth').map((r) => (r.id === 'settings' ? { ...r, ai: { ...(r.ai || {}), key: '' } } : r));
   return out;
 }
 export async function importAll(data, { replace = false } = {}) {
@@ -370,7 +370,7 @@ export async function importAll(data, { replace = false } = {}) {
   for (const s of STORES) {
     if (!Array.isArray(data[s])) continue;
     if (replace) await idb.clear(s);
-    let rows = s === 'kv' ? data[s].map((r) => (r.id === 'settings' ? { ...r, ai: { ...(r.ai || {}), key: S.settings.ai.key, models: S.settings.ai.models, model: S.settings.ai.model } } : r)) : data[s];
+    let rows = s === 'kv' ? data[s].filter((r) => r.id !== 'schoolAuth').map((r) => (r.id === 'settings' ? { ...r, ai: { ...(r.ai || {}), key: S.settings.ai.key, models: S.settings.ai.models, model: S.settings.ai.model } } : r)) : data[s];
     if (['pages', 'templates', 'versions'].includes(s)) rows = rows.map((r) => ({ ...r, html: sanitizeStoredHTML(r.html) }));
     await idb.putMany(s, rows);
   }

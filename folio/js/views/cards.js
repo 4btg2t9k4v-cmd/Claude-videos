@@ -163,7 +163,7 @@ export function quickCardDialog({ text, notebookId, context = '' }) {
 }
 
 /* ---------------- AI generation ---------------- */
-export function generateDeckDialog({ notebookId = '', folderId = '', pageId = '', text = '', name = '', deckId = '' } = {}) {
+export function generateDeckDialog({ notebookId = '', folderId = '', pageId = '', text = '', name = '', deckId = '', files: attached = [] } = {}) {
   if (!hasAI()) { toast('Add your Gemini key in Settings → AI first.', { action: { label: 'Open', run: () => go('#/settings/ai') } }); return; }
   const nbs = notebooks();
   let source = text ? 'text' : pageId ? 'page' : folderId ? 'folder' : 'notebook';
@@ -183,9 +183,10 @@ export function generateDeckDialog({ notebookId = '', folderId = '', pageId = ''
     if (source === 'notebook' || source === 'page' || source === 'folder') srcHost.append(field('Notebook', nbSel));
     if (source === 'page') { pageSel = select(pagesOf(nbId).map((p) => ({ value: p.id, label: p.title || 'Untitled page' })), pageId || pagesOf(nbId)[0]?.id, () => {}); srcHost.append(field('Page', pageSel)); }
     if (source === 'folder') { const fs = S.notebooks.get(nbId)?.folders || []; folderSel = select(fs.map((f) => ({ value: f.id, label: f.name })), folderId || fs[0]?.id, () => {}); srcHost.append(fs.length ? field('Section / chapter', folderSel) : h('p.muted', 'This notebook has no sections yet.')); }
-    if (source === 'text') srcHost.append(textIn);
+    if (source === 'text') srcHost.append(textIn, attachedNote());
     if (source === 'file') srcHost.append(h('div.dropzone', file ? h('div.file-chip', h('span', file.name), iconBtn('x', 'Remove', () => { file = null; drawSrc(); }, 'sm')) : h('button.btn.sm', { type: 'button', html: ic('upload') + '<span>Choose a document</span>', on: { click: async () => { file = await pickFile(ACCEPT); drawSrc(); } } })));
   }
+  const attachedNote = () => (attached.length ? h('p.muted', { style: { margin: '6px 0 0', fontSize: '13px' } }, `+ ${attached.length} attached file${attached.length === 1 ? '' : 's'} from school`) : '');
   const deckSel = select([{ value: '__new', label: '+ New deck' }, ...[...S.decks.values()].map((d) => ({ value: d.id, label: d.name }))], deckId || '__new', () => {});
   const typeChk = (t) => h('label', { style: { display: 'flex', gap: '8px', alignItems: 'center', fontSize: '14px' } }, h('input', { type: 'checkbox', checked: types.has(t), on: { change: (e) => (e.target.checked ? types.add(t) : types.delete(t)) } }), TYPE_LABEL[t]);
   const status = h('div');
@@ -207,7 +208,7 @@ export function generateDeckDialog({ notebookId = '', folderId = '', pageId = ''
     const files = [];
     let label = name;
     try {
-      if (source === 'text') { material = textIn.value.trim(); label ||= 'Cards from text'; }
+      if (source === 'text') { material = textIn.value.trim(); files.push(...attached); label ||= 'Cards from text'; }
       else if (source === 'file') { if (!file) return toast('Choose a document first.'); const m = await readMaterial(file); if (m.part) files.push(m.part); material = m.text || ''; label ||= file.name.replace(/\.\w+$/, ''); }
       else {
         const nb = S.notebooks.get(nbId);

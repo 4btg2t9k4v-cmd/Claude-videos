@@ -1,6 +1,7 @@
 import { S, initStore, on, notebooks, dueCards, setSetting, isSaving } from './store.js';
 import { $, h, ic, esc, toast, closeTopSheet, closePopover } from './util.js';
 import { installShortcuts, onShortcut, prettyCombo, bindingFor } from './shortcuts.js';
+import { initSchool } from './school/store.js';
 
 /* ---------------- theme ---------------- */
 export const THEMES = [
@@ -24,6 +25,7 @@ export function applyTheme(theme = S.settings.theme) {
 /* ---------------- router ---------------- */
 const routes = [
   [/^#?\/?$/, () => import('./views/home.js'), () => ({})],
+  [/^#\/school$/, () => import('./views/school.js'), () => ({})],
   [/^#\/notebooks$/, () => import('./views/library.js'), () => ({})],
   [/^#\/nb\/([^/]+)(?:\/([^/]+))?$/, () => import('./views/notebook.js'), (m) => ({ id: m[1], pageId: m[2] })],
   [/^#\/cards$/, () => import('./views/cards.js'), () => ({ mode: 'list' })],
@@ -95,6 +97,7 @@ function renderSidebar() {
       h('button.icon-btn.sm', { type: 'button', title: 'Hide sidebar', 'aria-label': 'Hide sidebar', html: ic('panel-left'), on: { click: toggleSidebar } })),
     h('div.sb-scroll',
       item('#/', 'home', 'Home'),
+      item('#/school', 'grad', 'School'),
       h('button.sb-item', { type: 'button', on: { click: () => openSearch() } }, h('span', { html: ic('search') }), h('span', 'Search'), h('kbd', prettyCombo(bindingFor('search')))),
       item('#/notebooks', 'library', 'All notebooks'),
       item('#/cards', 'cards', 'Flashcards', due ? h('span.count', String(due)) : null),
@@ -134,6 +137,7 @@ export function savePill() {
 async function boot() {
   try {
     await initStore();
+    await initSchool();
   } catch (e) {
     document.body.innerHTML = `<div class="empty" style="height:100vh;align-content:center"><h3>Folio can’t open its storage</h3><p>${esc(e.message || e)}. Private browsing blocks storage on some devices.</p></div>`;
     return;
