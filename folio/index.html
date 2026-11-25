@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org; font-src 'self' data:; media-src 'self' https://api.dictionaryapi.dev https://ssl.gstatic.com; connect-src 'self' https://generativelanguage.googleapis.com https://api.dictionaryapi.dev https://en.wiktionary.org https://api.mymemory.translated.net https://pubchem.ncbi.nlm.nih.gov https://nominatim.openstreetmap.org; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Folio — study notebook</title>
+  <meta name="description" content="A notebook for studying: notes, handwriting, flashcards, quizzes and an AI tutor that works from your own notes.">
+  <meta name="theme-color" content="#F3EFE7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Folio">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="vendor/katex/katex.min.css">
+  <script src="js/theme-boot.js"></script>
+</head>
+<body>
+  <div id="app" class="app">
+    <nav id="sidebar" class="sidebar" aria-label="Main"></nav>
+    <main id="main" class="main"></main>
+  </div>
+  <div id="scrim" class="scrim"></div>
+  <div id="print-root"></div>
+  <noscript>Folio needs JavaScript to run.</noscript>
+  <script src="vendor/katex/katex.min.js" defer></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
