@@ -215,6 +215,12 @@ export function connectPronoteDialog(onDone) {
   }
 
   draw();
+  import('../school/pronote-fetcher.js').then(async (m) => {
+    if (await m.relayAvailable()) return;
+    goBtn.disabled = true;
+    status.innerHTML = '';
+    status.append(h('p', { style: { color: 'var(--danger, #b42318)', margin: '10px 0 0' } }, m.RELAY_MISSING));
+  });
   const s = sheet({ title: 'Connect Pronote', body, actions: [h('button.btn.ghost', { type: 'button', text: 'Cancel', on: { click: () => s.close() } }), goBtn] });
 }
 

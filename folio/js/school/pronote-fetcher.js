@@ -24,7 +24,7 @@ async function call(post, payload) {
     throw new RelayError('No connection. Check your internet and try again.', 0);
   }
   let data;
-  try { data = await res.json(); } catch { throw new RelayError('The school connection service is not available right now.', res.status); }
+  try { data = await res.json(); } catch { throw new RelayError(RELAY_MISSING, res.status); }
   if (!res.ok) throw new RelayError(data?.error || 'The school connection service refused the request.', res.status);
   return data;
 }
@@ -56,6 +56,17 @@ export async function relayDownload(post, url) {
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return { bytes, type: (data.headers['content-type'] || 'application/octet-stream').split(';')[0] };
+}
+
+export const RELAY_MISSING = 'This copy of the app has no Pronote relay, so it can’t reach Pronote. It must run with its relay function: locally with “node scripts/dev-server.mjs”, or on Netlify deployed from GitHub (not drag-and-drop). See SCHOOL.md.';
+
+/** True when /api/pronote is our relay (it answers GET with a JSON 405). */
+export async function relayAvailable() {
+  if (location.protocol === 'file:') return false;
+  try {
+    const r = await fetch('/api/pronote', { method: 'GET', cache: 'no-store' });
+    return r.status === 405 && (r.headers.get('content-type') || '').includes('json');
+  } catch { return false; }
 }
 
 /** The relay as used by the web app. */
